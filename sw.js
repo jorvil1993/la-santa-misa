@@ -1,5 +1,6 @@
-const CACHE="misa-v1";
+const CACHE="misa-v2";
 const ARCHIVOS=["./","./index.html","./cap1.html","./juego.html",
+  "./cruz.html","./lampara.html","./postura.html",
   "./manifest.webmanifest","./icon-192.png","./icon-512.png"];
 self.addEventListener("install",e=>{
   self.skipWaiting();
