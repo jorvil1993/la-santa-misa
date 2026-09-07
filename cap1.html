@@ -1,5 +1,34 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0B0A08">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Las campanas</title>
+<style>
+html,body{height:100%;margin:0;background:#0B0A08;overscroll-behavior:none}
+body{display:grid;place-items:center;overflow:hidden}
+.env{max-width:none!important;margin:0!important;padding:0!important;width:auto!important}
+.cab,.barra,.notas{display:none!important}
+.pantalla{
+  aspect-ratio:16/10!important;
+  height:100dvh!important; width:auto!important;
+  max-width:100vw!important; max-height:100dvh!important;
+  border-radius:0!important; box-shadow:none!important;
+}
+.pantalla:fullscreen{width:100vw!important;height:100dvh!important}
+#pantallaCompleta,#reiniciar,#saltar,#casi,.pruebas{display:none!important}
+</style>
+</head>
+<body>
+
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -164,11 +193,7 @@ h1{font-family:"Baloo 2",sans-serif; font-weight:800; font-size:clamp(1.6rem,4.4
 </style>
 
 <div class="env">
-  <div class="cab">
-    <div class="et">Prototipo jugable · Mundo 1</div>
-    <h1>Capítulo 1 · Las campanas</h1>
-    <p class="sub">María con su voz de verdad y sus dibujos. Cuando ella habla no se puede jugar, y para seguir hay que tocar el botón. Súbele el volumen.</p>
-  </div>
+  
 
   <div class="pantalla" id="pantalla">
     
@@ -375,38 +400,9 @@ h1{font-family:"Baloo 2",sans-serif; font-weight:800; font-size:clamp(1.6rem,4.4
     </button>
   </div>
 
-  <div class="barra">
-    <button class="btn" id="reiniciar" type="button">Empezar de nuevo</button>
-    <span class="pruebas">Para probar:</span>
-    <button class="btn chico" id="ir-premio" type="button">Insignia Torre</button>
-    <button class="btn chico" id="ir-altar" type="button">Ir al Altar (3 rondas)</button>
-    <button class="btn chico" id="ir-premio-altar" type="button">Insignia Altar</button>
-    <button class="btn chico" id="ir-parte2" type="button">Parte 2 completa</button>
-    <div class="paso" id="pasoTxt">—</div>
-  </div>
+  
 
-  <div class="notas">
-    <div class="nota"><h3>Turnos, nunca a la vez</h3>
-      <p>Mientras María habla las campanas no responden y no suena nada más. Al terminar aparece el botón. Tocar la pantalla adelanta la frase, no juega.</p></div>
-    <div class="nota"><h3>Los tres niveles son las tres llamadas</h3>
-      <p>Alístate, sal de tu casa, ya empieza. Dos, tres y cuatro campanadas. Si falla dos veces, la tercera va más lenta y ella se lo dice.</p></div>
-    <div class="nota"><h3>Segunda parte: el altar</h3>
-      <p>La campanilla es el sonido <strong>real</strong> de una misa, sacado del video que pasaste y afinado en tres alturas. Y el dibujo vibra con esa grabación, no con una animación aparte.</p></div>
-    <div class="nota"><h3>La campanilla es la tuya</h3>
-      <p>La cargaba con una petición de red que la política de seguridad de la página bloquea, aunque el archivo venga dentro del HTML. Al fallar caía al sonido sintetizado sin avisar. Ahora se decodifica en memoria.</p></div>
-    <div class="nota"><h3>Una sola voz a la vez</h3>
-      <p>Todas las frases pasan por un mismo canal: al abrir una se corta la anterior. Y el guion avanza cuando el audio termina, no a los tantos segundos — por reloj fijo, la felicitación se pisaba con la frase siguiente.</p></div>
-    <div class="nota"><h3>Por qué hay una portada</h3>
-      <p>Ningún navegador deja sonar audio hasta que la persona toca la pantalla. Por eso el botón de empezar: sin él, la primera frase de María salía muda. En la app de José ese toque ya existe — es el álbum de estampitas.</p></div>
-    <div class="nota"><h3>El sacerdote y la elevación</h3>
-      <p>Al sonar la campanita en el altar, el sacerdote eleva la Hostia consagrada y María se arrodilla. José aprende viendo lo que de verdad pasa en la misa.</p></div>
-    <div class="nota"><h3>Campanas y medallas ilustradas</h3>
-      <p>Las tres campanas de la torre son la ilustración en bronce de la tanda 2 escalada a tres tamaños. Y las estampitas son las medallas doradas ganadas.</p></div>
-    <div class="nota"><h3>Los dos botones de prueba</h3>
-      <p><strong>Ir a las campanitas</strong> te suelta directo en el juego del altar. <strong>Ir a la parte 2</strong> arranca desde que María la presenta. No van en la app de José: son solo para no repetir el capítulo entero cada vez.</p></div>
-    <div class="nota"><h3>Falta ponerle</h3>
-      <p>Las campanas dibujadas de la tanda 2 y los fondos de la tanda 3, y las Marías sin fondo que estás pidiendo. Lo de ahora es SVG hecho con código.</p></div>
-  </div>
+  
 </div>
 
 <script>
@@ -942,9 +938,10 @@ const CAMP = {"c0": "data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYy
 </script>
 
 
+
 <style>
 #casita-nav{position:fixed;z-index:99999;right:14px;top:14px;width:46px;height:46px;
- border:none;border-radius:50%;cursor:pointer;padding:0;background:rgba(255,255,255,.92);
+ border:none;border-radius:50%;cursor:pointer;padding:0;background:rgba(255,255,255,.9);
  box-shadow:0 5px 14px -4px rgba(0,0,0,.5);display:grid;place-items:center}
 #casita-nav svg{width:24px;height:24px}
 </style>
@@ -968,4 +965,19 @@ const CAMP = {"c0": "data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYy
   }
 })();
 </script>
+
+<script>
+(function(){
+  if("serviceWorker" in navigator){
+    addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); });
+  }
+  function deLado(){
+    var o = screen.orientation;
+    if(o && o.lock) { try{ o.lock("landscape").catch(function(){}); }catch(e){} }
+  }
+  addEventListener("pointerdown", deLado, {once:true});
+  document.addEventListener("fullscreenchange", deLado);
+})();
+</script>
+</body>
 </html>
