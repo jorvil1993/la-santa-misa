@@ -1,6 +1,6 @@
-const CACHE="misa-v5";
-const ARCHIVOS=["./","./index.html","./cap1.html","./juego.html","./tarjeta.html",
-  "./cruz.html","./lampara.html","./postura.html",
+const CACHE="misa-v8";
+const ARCHIVOS=["./","./index.html","./cap1.html","./juego.html","./ofrenda.html","./intenciones.html","./tarjeta.html",
+  "./cruz.html","./lampara.html","./postura.html","./canciones.html",
   "./manifest.webmanifest","./icon-192.png","./icon-512.png"];
 self.addEventListener("install",e=>{
   self.skipWaiting();

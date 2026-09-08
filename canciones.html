@@ -89,11 +89,20 @@ h1{font-family:"Baloo 2",sans-serif;font-weight:800;font-size:clamp(1.5rem,4vw,2
 .aviso{margin-top:16px;padding:13px 16px;border-left:3px solid var(--oro);background:var(--sup);
   border-radius:0 10px 10px 0;font-size:13px;color:var(--tenue);line-height:1.55}
 .aviso b{color:var(--tinta)}
+.volver{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;
+  color:var(--acento);text-decoration:none;margin-bottom:12px;padding:7px 14px;
+  background:var(--sup);border:1px solid var(--borde);border-radius:9px;transition:all .2s}
+.volver:hover{border-color:var(--acento);transform:translateX(-2px)}
+.volver svg{width:16px;height:16px}
 </style>
 </head>
 <body>
 <div class="env">
   <div class="cab">
+    <a href="index.html" class="volver" aria-label="Volver al camino">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Volver al camino
+    </a>
     <div class="et">Prueba local · el momento musical</div>
     <h1>¿Conoces esta canción?</h1>
     <p class="sub">Hay varias versiones de los que no reconoció José. Elige un canto abajo y dale a empezar. Suena el pedacito, María pregunta si lo conoce, y según lo que conteste lo canta con él o se lo enseña. El micrófono graba y devuelve, nunca corrige.</p>

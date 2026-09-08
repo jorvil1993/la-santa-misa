@@ -24,6 +24,8 @@ body{display:grid;place-items:center;overflow:hidden}
 }
 .pantalla:fullscreen{width:100vw!important;height:100dvh!important}
 #pantallaCompleta,#reiniciar,#saltar,#casi,.pruebas{display:none!important}
+
+.pantalla{position:relative;width:min(100vw, calc(100dvh * 16 / 9))!important;height:min(100dvh, calc(100vw * 9 / 16))!important;aspect-ratio:16/9!important;max-width:100vw!important;max-height:100dvh!important;overflow:hidden;border-radius:0!important;box-shadow:none!important}
 </style>
 </head>
 <body>
