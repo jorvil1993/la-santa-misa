@@ -533,7 +533,7 @@ var RUTA_MUNDO1 = [
   const $=id=>document.getElementById(id);
   const pantalla=$("pantalla"), globo=$("globo"), globoTxt=$("globo-txt"),
         maria=$("maria"), seguir=$("seguir"), velitasBox=$("velitas"),
-        album=$("album"), pasoTxt=$("pasoTxt");
+        album=$("album"), pasoTxt=$("pasoTxt")||{textContent:""};
   const velitas=[...velitasBox.children];
 
   let ctx=null, ana=null, buf=null, vozActual=null;
@@ -1045,12 +1045,12 @@ var RUTA_MUNDO1 = [
   seguir.addEventListener("click",e=>{ e.stopPropagation(); ac();
     gsap.killTweensOf(seguir); seguir.hidden=true; idx++; correr(); });
   pantalla.addEventListener("pointerdown",()=>{ ac(); if(modo==="habla") adelantar(); });
-  $("reiniciar").addEventListener("click",()=>irA(0,"torre",false));
+  if($("reiniciar")) $("reiniciar").addEventListener("click",()=>irA(0,"torre",false));
 
-  $("ir-premio").addEventListener("click",()=>{ ac(); irA(8,"torre",false); });
-    $("ir-premio-altar").addEventListener("click",()=>{ ac(); irA(19,"altar",true); });
-    $("ir-altar").addEventListener("click",()=>{ ac(); irA(16,"altar",true); });
-  $("ir-parte2").addEventListener("click",()=>{ ac(); irA(10,"torre",true); });
+  if($("ir-premio")) $("ir-premio").addEventListener("click",()=>{ ac(); irA(8,"torre",false); });
+    if($("ir-premio-altar")) $("ir-premio-altar").addEventListener("click",()=>{ ac(); irA(19,"altar",true); });
+    if($("ir-altar")) $("ir-altar").addEventListener("click",()=>{ ac(); irA(16,"altar",true); });
+  if($("ir-parte2")) $("ir-parte2").addEventListener("click",()=>{ ac(); irA(10,"torre",true); });
 
   gsap.to("#nubes",{x:24,duration:11,repeat:-1,yoyo:true,ease:"sine.inOut"});
 
