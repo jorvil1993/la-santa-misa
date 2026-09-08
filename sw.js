@@ -1,4 +1,4 @@
-const CACHE="misa-v4";
+const CACHE="misa-v5";
 const ARCHIVOS=["./","./index.html","./cap1.html","./juego.html","./tarjeta.html",
   "./cruz.html","./lampara.html","./postura.html",
   "./manifest.webmanifest","./icon-192.png","./icon-512.png"];
