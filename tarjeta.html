@@ -18,6 +18,9 @@ body{display:grid;place-items:center;overflow:hidden;
 .pantalla{position:relative;aspect-ratio:16/9;height:100dvh;width:auto;
   max-width:100vw;max-height:100dvh;overflow:hidden;background:#1A140F;touch-action:none}
 #fondo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#entrada-luz{position:absolute;z-index:2;left:51%;top:54%;width:38%;height:54%;
+  transform:translate(-50%,-50%) scale(.8);opacity:0;pointer-events:none;
+  background:radial-gradient(ellipse,rgba(255,225,139,.52) 0%,rgba(255,191,72,.2) 44%,transparent 72%)}
 
 #toque{position:absolute;z-index:4;width:clamp(64px,11vw,124px);height:clamp(64px,11vw,124px);
   transform:translate(-50%,-50%);border:none;border-radius:50%;cursor:pointer;padding:0;
@@ -70,6 +73,7 @@ body{display:grid;place-items:center;overflow:hidden;
 <body>
 <div class="pantalla" id="pantalla">
   <img id="fondo" alt="">
+  <div id="entrada-luz" aria-hidden="true"></div>
   <button id="toque" type="button" hidden aria-label="Tocar"></button>
   <img id="maria" alt="">
   <img id="marca" alt="">
@@ -324,7 +328,11 @@ var RUTA_MUNDO1 = [
     gsap.to(maria,{opacity:1,scale:1,duration:.5});
     pose("celebra");
     const m=$("marca");
-    if(IMG.marca){
+    if(T.clave==="puerta"){
+
+      gsap.to("#fondo",{scale:1.24,transformOrigin:"54% 55%",filter:"brightness(1.13) saturate(1.06)",duration:1.15,ease:"power2.inOut"});
+      gsap.fromTo("#entrada-luz",{opacity:0,scale:.8},{opacity:1,scale:1.12,duration:.75,ease:"sine.out"});
+    } else if(IMG.marca){
       m.src=IMG.marca;
       gsap.fromTo(m,{scale:0,rotation:-150,opacity:0},
         {scale:1,rotation:0,opacity:1,duration:1,ease:"back.out(1.7)"});
