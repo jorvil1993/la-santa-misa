@@ -111,6 +111,17 @@ body{margin:0;font-family:"Baloo 2",system-ui,sans-serif;
 .btn-opcion.musica{background:#F5B733;color:#3B2A10}
 .btn-opcion.musica:hover{background:#ebb02e}
 .btn-opcion svg{width:18px;height:18px}
+#listaPrueba{display:grid;grid-template-columns:1fr;gap:7px;max-height:min(52dvh,390px);
+  overflow:auto;padding:2px 3px 3px;text-align:left}
+.item-prueba{width:100%;border:1px solid #DCE3F1;border-radius:11px;background:#F8FAFF;
+  padding:9px 11px;display:flex;align-items:center;gap:9px;cursor:pointer;text-align:left;
+  font:inherit;color:#26375C}
+.item-prueba:hover{background:#EAF0FC}
+.tipo-prueba{flex:0 0 auto;font:800 10px/1 system-ui,sans-serif;letter-spacing:.04em;
+  text-transform:uppercase;color:#4F6394;background:#DEE7F8;border-radius:10px;padding:4px 6px}
+.item-prueba.juego .tipo-prueba{background:#FBE1A6;color:#72500B}
+.nombre-prueba{font-size:13px;font-weight:800;line-height:1.15}
+.aviso-prueba{font:12px/1.35 system-ui,sans-serif;color:#6C6560;margin:0 0 11px!important}
 
 #tocar{position:absolute;inset:0;z-index:9;display:grid;place-items:center;
   background:radial-gradient(circle at 50% 55%,rgba(20,16,12,.2),rgba(20,16,12,.55));cursor:pointer}
@@ -163,11 +174,20 @@ body{margin:0;font-family:"Baloo 2",system-ui,sans-serif;
         <h2>Panel de papá</h2>
         <div class="seccion-papa">
           <div class="seccion-cab">
-            <span class="seccion-tit">Juego libre</span>
-            <span class="badge" id="badgeLibre">Apagado</span>
+            <span class="seccion-tit">Modo José</span>
+            <span class="badge on">Recorrido guiado</span>
           </div>
-          <div class="estado-libre" id="estadoLibre">Solo puede entrar a la parada que le toca.</div>
-          <button type="button" id="btnToggleLibre" class="btn-opcion">Activar juego libre</button>
+          <div class="estado-libre">Sigue el orden de la misa y guarda exactamente dónde se quedó.</div>
+          <button type="button" id="btnModoJose" class="btn-opcion">Continuar como José</button>
+        </div>
+
+        <div class="seccion-papa">
+          <div class="seccion-cab">
+            <span class="seccion-tit">Modo Prueba</span>
+            <span class="badge off">Para adultos</span>
+          </div>
+          <div class="estado-libre">Lista de tarjetas y juegos con flechas para avanzar o volver sin esperar las voces. No cambia el avance de José.</div>
+          <button type="button" id="btnModoPrueba" class="btn-opcion musica">Abrir modo Prueba</button>
         </div>
 
         <div class="seccion-papa">
@@ -183,6 +203,15 @@ body{margin:0;font-family:"Baloo 2",system-ui,sans-serif;
 
         <div class="acciones" style="margin-top:16px">
           <button type="button" id="cerrarMenu" class="ok" style="width:100%">Volver al camino</button>
+        </div>
+      </div>
+
+      <div id="panelFasePrueba" hidden>
+        <h2>Modo Prueba</h2>
+        <p class="aviso-prueba">Aquí puedes abrir cualquier tarjeta o juego. Las flechas aparecen dentro de cada prueba y este recorrido no guarda el avance de José.</p>
+        <div id="listaPrueba" aria-label="Lista de tarjetas y juegos"></div>
+        <div class="acciones" style="margin-top:14px">
+          <button type="button" id="salirPrueba">Salir de Prueba</button>
         </div>
       </div>
     </div>
@@ -322,6 +351,93 @@ var RUTA_MUNDO1 = [
   }
 ];
 
+// ---- Modo Prueba ---------------------------------------------------------
+// Es una sesión temporal para el adulto: no escribe el avance ni los premios
+// de José y desaparece al salir o cerrar la pestaña.
+(function(){
+  var CLAVE_MODO="misa_modo_sesion";
+  function leerSesion(){
+    try{return typeof sessionStorage!=="undefined" ? sessionStorage.getItem(CLAVE_MODO) : null;}
+    catch(e){return null;}
+  }
+  function escribirSesion(v){
+    try{ if(typeof sessionStorage!=="undefined"){ sessionStorage.setItem(CLAVE_MODO,v); } }
+    catch(e){}
+  }
+  function borrarSesion(){
+    try{ if(typeof sessionStorage!=="undefined"){ sessionStorage.removeItem(CLAVE_MODO); } }
+    catch(e){}
+  }
+
+  window.MISA_PRUEBA=leerSesion()==="prueba";
+  window.misaEntrarPrueba=function(destino){
+    escribirSesion("prueba");
+    location.href=destino||"index.html?modo=prueba";
+  };
+  window.misaSalirPrueba=function(){
+    borrarSesion();
+    location.href="index.html";
+  };
+
+  // Ninguna pantalla de prueba puede marcar una parada, una insignia o un
+  // mejor resultado como si José la hubiera completado.
+  if(window.MISA_PRUEBA && typeof Storage!=="undefined"){
+    try{
+      var guardarOriginal=Storage.prototype.setItem;
+      Storage.prototype.setItem=function(clave,valor){
+        var k=String(clave||"");
+        if(this===localStorage && /^(misa_(hecho_|parada_actual|mejor_|insignia_|album_|ronda_|total_visitas|visitas_hoy|ultima_visita))/.test(k)) return;
+        return guardarOriginal.call(this,clave,valor);
+      };
+    }catch(e){}
+  }
+
+  function urlActual(){
+    var pagina=((location.pathname||"").split("/").pop()||"index.html");
+    return pagina+(location.search||"");
+  }
+  function indiceActual(){
+    var actual=urlActual();
+    for(var i=0;i<RUTA_MUNDO1.length;i++){
+      if(String(RUTA_MUNDO1[i].url||"").replace(/^\.\//,"")===actual) return i;
+    }
+    return -1;
+  }
+  function irA(url){ location.href=url; }
+  function boton(texto,etiqueta,fn){
+    var b=document.createElement("button");
+    b.type="button"; b.className="misa-prueba-btn"; b.textContent=texto;
+    b.setAttribute("aria-label",etiqueta); b.addEventListener("click",fn);
+    return b;
+  }
+  function agregarEstilo(){
+    var s=document.createElement("style");
+    s.textContent="#misa-prueba-nav{position:fixed;z-index:9999;left:50%;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;align-items:center;gap:7px;padding:7px;border-radius:18px;background:rgba(25,33,58,.94);box-shadow:0 8px 22px rgba(0,0,0,.35);font-family:system-ui,sans-serif}.misa-prueba-btn{border:0;border-radius:12px;min-height:39px;padding:0 12px;background:#FFF7E6;color:#273353;font-weight:800;font-size:13px;cursor:pointer}.misa-prueba-btn:disabled{opacity:.38;cursor:default}.misa-prueba-salir{background:#F3BB42}.misa-prueba-etiqueta{color:#fff;font-size:11px;font-weight:800;white-space:nowrap;padding:0 3px}";
+    (document.head||document.body).appendChild(s);
+  }
+  function crearControles(){
+    if(!window.MISA_PRUEBA || !document.body || document.getElementById("misa-prueba-nav")) return;
+    agregarEstilo();
+    var nav=document.createElement("nav"); nav.id="misa-prueba-nav";
+    nav.setAttribute("aria-label","Controles de modo prueba");
+    var i=indiceActual();
+    if(i>=0){
+      var atras=boton("←","Ir a la prueba anterior",function(){if(i>0) irA(RUTA_MUNDO1[i-1].url);});
+      atras.disabled=i===0; nav.appendChild(atras);
+    }
+    var lista=boton("Lista","Ver todas las pruebas",function(){irA("index.html?modo=prueba");});
+    nav.appendChild(lista);
+    if(i>=0){
+      var adelante=boton("→","Ir a la prueba siguiente",function(){if(i<RUTA_MUNDO1.length-1) irA(RUTA_MUNDO1[i+1].url);});
+      adelante.disabled=i===RUTA_MUNDO1.length-1; nav.appendChild(adelante);
+    }
+    var salir=boton("Salir","Volver al modo José",function(){window.misaSalirPrueba();});
+    salir.className+=" misa-prueba-salir"; nav.appendChild(salir);
+    document.body.appendChild(nav);
+  }
+  crearControles();
+})();
+
 </script>
 <script>
 (function(){
@@ -339,7 +455,8 @@ var RUTA_MUNDO1 = [
 
   function leer(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
   function guardar(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
-  let libre = leer("misa_libre")==="1";
+  const modoPrueba=()=>window.MISA_PRUEBA===true;
+  let libre = modoPrueba();
 
   // -------- tira de paradas --------
   const tira=$("tira");
@@ -459,9 +576,11 @@ var RUTA_MUNDO1 = [
     const diasSinEntrar = ultima
       ? Math.round((new Date()-new Date(ultima))/(1000*60*60*24))
       : 0;
-    guardar("misa_ultima_visita", hoy);
-    guardar("misa_total_visitas", visitasTotal);
-    guardar("misa_visitas_hoy", visitasHoy);
+    if(!modoPrueba()){
+      guardar("misa_ultima_visita", hoy);
+      guardar("misa_total_visitas", visitasTotal);
+      guardar("misa_visitas_hoy", visitasHoy);
+    }
 
     if(visitasTotal===1)    return "saludo_primera";   // primera vez de todas
     if(diasSinEntrar>=4)    return "saludo_rato";      // cuánto tiempo
@@ -471,6 +590,12 @@ var RUTA_MUNDO1 = [
 
   function saludar(){
     tocar.hidden=true;
+    if(modoPrueba()){
+      decir("Modo Prueba: elige una tarjeta o un juego de la lista.");
+      gsap.fromTo("#maria",{x:-24,opacity:0},{x:0,opacity:1,duration:.6,ease:"power2.out"});
+      gsap.fromTo(".parada",{scale:0},{scale:1,duration:.35,stagger:.035,ease:"back.out(1.8)"});
+      return;
+    }
     const claveSaludo = elegirSaludo();
     const textos={
       saludo_primera:  "Hola, soy María, y te voy a enseñar la misa.",
@@ -489,15 +614,15 @@ var RUTA_MUNDO1 = [
 
   function ir(destino, clave){
     if(audio){ audio.pause(); audio=null; }
-    if(clave) guardar("misa_parada_actual", clave);
+    if(clave && !modoPrueba()) guardar("misa_parada_actual", clave);
     gsap.to("#mapa",{opacity:0,duration:.35,onComplete:()=>{location.href=destino;}});
   }
 
   // ---------- panel de papá ----------
   const panel = $("panel"), claveInput = $("clave"),
     panelFaseSuma = $("panelFaseSuma"), panelFaseMenu = $("panelFaseMenu"),
-    retoSuma = $("retoSuma"), badgeLibre = $("badgeLibre"),
-    estadoLibre = $("estadoLibre"), btnToggleLibre = $("btnToggleLibre");
+    panelFasePrueba = $("panelFasePrueba"), retoSuma = $("retoSuma"),
+    listaPrueba = $("listaPrueba");
 
   let sumaCorrecta = 0;
   function nuevaSuma(){
@@ -510,20 +635,26 @@ var RUTA_MUNDO1 = [
     setTimeout(()=>claveInput.focus(), 60);
   }
 
-  function pintarEstadoLibre(){
-    const activo = leer("misa_libre") === "1";
-    badgeLibre.textContent = activo ? "Activado" : "Apagado";
-    badgeLibre.className = "badge " + (activo ? "on" : "off");
-    estadoLibre.textContent = activo
-      ? "José puede entrar a cualquier parada del camino."
-      : "José solo puede entrar a la parada que le toca.";
-    btnToggleLibre.textContent = activo ? "Desactivar juego libre" : "Activar juego libre";
+  function abrirListaPrueba(){
+    panel.hidden=false;
+    panelFaseSuma.hidden=true; panelFaseMenu.hidden=true; panelFasePrueba.hidden=false;
+    listaPrueba.innerHTML="";
+    RUTA_MUNDO1.forEach((j,i)=>{
+      if(!j.url) return;
+      const b=document.createElement("button");
+      b.type="button";
+      b.className="item-prueba "+(j.t==="j"?"juego":"tarjeta");
+      b.innerHTML='<span class="tipo-prueba">'+(j.t==="j"?"Juego":"Tarjeta")+'</span><span class="nombre-prueba">'+(i+1)+'. '+j.n+'</span>';
+      b.addEventListener("click",()=>{ location.href=j.url; });
+      listaPrueba.appendChild(b);
+    });
   }
 
   function abrirPanel(){
+    if(modoPrueba()){ abrirListaPrueba(); return; }
     panel.hidden = false;
     panelFaseSuma.hidden = false;
-    panelFaseMenu.hidden = true;
+    panelFaseMenu.hidden = true; panelFasePrueba.hidden=true;
     nuevaSuma();
   }
 
@@ -535,7 +666,6 @@ var RUTA_MUNDO1 = [
     if (!isNaN(val) && val === sumaCorrecta){
       panelFaseSuma.hidden = true;
       panelFaseMenu.hidden = false;
-      pintarEstadoLibre();
     } else {
       claveInput.classList.add("mal");
       setTimeout(nuevaSuma, 400);
@@ -545,19 +675,15 @@ var RUTA_MUNDO1 = [
   $("entrar").addEventListener("click", validarSuma);
   claveInput.addEventListener("keydown", e => { if (e.key === "Enter") validarSuma(); });
 
-  btnToggleLibre.addEventListener("click", () => {
-    const nuevo = leer("misa_libre") === "1" ? "0" : "1";
-    guardar("misa_libre", nuevo);
-    libre = nuevo === "1";
-    pintarEstadoLibre();
-    construir();
-  });
-
-  $("btnCanciones").addEventListener("click", () => { ir("canciones.html"); });
+  $("btnModoJose").addEventListener("click", () => { panel.hidden = true; });
+  $("btnModoPrueba").addEventListener("click", () => { window.misaEntrarPrueba(); });
+  $("salirPrueba").addEventListener("click", () => { window.misaSalirPrueba(); });
+  $("btnCanciones").addEventListener("click", () => { window.misaEntrarPrueba("canciones.html"); });
   $("cerrarMenu").addEventListener("click", () => { panel.hidden = true; });
 
   if(IMG.maria) $("maria").src=IMG.maria;
   construir();
+  if(modoPrueba()) abrirListaPrueba();
   addEventListener("resize", dibujarSenda);
 })();
 </script>

@@ -213,6 +213,88 @@ var RUTA_MUNDO1 = [
   }
 ];
 
+(function(){
+  var CLAVE_MODO="misa_modo_sesion";
+  function leerSesion(){
+    try{return typeof sessionStorage!=="undefined" ? sessionStorage.getItem(CLAVE_MODO) : null;}
+    catch(e){return null;}
+  }
+  function escribirSesion(v){
+    try{ if(typeof sessionStorage!=="undefined"){ sessionStorage.setItem(CLAVE_MODO,v); } }
+    catch(e){}
+  }
+  function borrarSesion(){
+    try{ if(typeof sessionStorage!=="undefined"){ sessionStorage.removeItem(CLAVE_MODO); } }
+    catch(e){}
+  }
+
+  window.MISA_PRUEBA=leerSesion()==="prueba";
+  window.misaEntrarPrueba=function(destino){
+    escribirSesion("prueba");
+    location.href=destino||"index.html?modo=prueba";
+  };
+  window.misaSalirPrueba=function(){
+    borrarSesion();
+    location.href="index.html";
+  };
+
+  if(window.MISA_PRUEBA && typeof Storage!=="undefined"){
+    try{
+      var guardarOriginal=Storage.prototype.setItem;
+      Storage.prototype.setItem=function(clave,valor){
+        var k=String(clave||"");
+        if(this===localStorage && /^(misa_(hecho_|parada_actual|mejor_|insignia_|album_|ronda_|total_visitas|visitas_hoy|ultima_visita))/.test(k)) return;
+        return guardarOriginal.call(this,clave,valor);
+      };
+    }catch(e){}
+  }
+
+  function urlActual(){
+    var pagina=((location.pathname||"").split("/").pop()||"index.html");
+    return pagina+(location.search||"");
+  }
+  function indiceActual(){
+    var actual=urlActual();
+    for(var i=0;i<RUTA_MUNDO1.length;i++){
+      if(String(RUTA_MUNDO1[i].url||"").replace(/^\.\//,"")===actual) return i;
+    }
+    return -1;
+  }
+  function irA(url){ location.href=url; }
+  function boton(texto,etiqueta,fn){
+    var b=document.createElement("button");
+    b.type="button"; b.className="misa-prueba-btn"; b.textContent=texto;
+    b.setAttribute("aria-label",etiqueta); b.addEventListener("click",fn);
+    return b;
+  }
+  function agregarEstilo(){
+    var s=document.createElement("style");
+    s.textContent="#misa-prueba-nav{position:fixed;z-index:9999;left:50%;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;align-items:center;gap:7px;padding:7px;border-radius:18px;background:rgba(25,33,58,.94);box-shadow:0 8px 22px rgba(0,0,0,.35);font-family:system-ui,sans-serif}.misa-prueba-btn{border:0;border-radius:12px;min-height:39px;padding:0 12px;background:#FFF7E6;color:#273353;font-weight:800;font-size:13px;cursor:pointer}.misa-prueba-btn:disabled{opacity:.38;cursor:default}.misa-prueba-salir{background:#F3BB42}.misa-prueba-etiqueta{color:#fff;font-size:11px;font-weight:800;white-space:nowrap;padding:0 3px}";
+    (document.head||document.body).appendChild(s);
+  }
+  function crearControles(){
+    if(!window.MISA_PRUEBA || !document.body || document.getElementById("misa-prueba-nav")) return;
+    agregarEstilo();
+    var nav=document.createElement("nav"); nav.id="misa-prueba-nav";
+    nav.setAttribute("aria-label","Controles de modo prueba");
+    var i=indiceActual();
+    if(i>=0){
+      var atras=boton("←","Ir a la prueba anterior",function(){if(i>0) irA(RUTA_MUNDO1[i-1].url);});
+      atras.disabled=i===0; nav.appendChild(atras);
+    }
+    var lista=boton("Lista","Ver todas las pruebas",function(){irA("index.html?modo=prueba");});
+    nav.appendChild(lista);
+    if(i>=0){
+      var adelante=boton("→","Ir a la prueba siguiente",function(){if(i<RUTA_MUNDO1.length-1) irA(RUTA_MUNDO1[i+1].url);});
+      adelante.disabled=i===RUTA_MUNDO1.length-1; nav.appendChild(adelante);
+    }
+    var salir=boton("Salir","Volver al modo José",function(){window.misaSalirPrueba();});
+    salir.className+=" misa-prueba-salir"; nav.appendChild(salir);
+    document.body.appendChild(nav);
+  }
+  crearControles();
+})();
+
 </script>
 <script>
 (function(){
