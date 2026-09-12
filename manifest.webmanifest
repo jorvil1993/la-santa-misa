@@ -1,4 +1,5 @@
 {
+  "id": "./index.html",
   "name": "La Santa Misa paso a paso",
   "short_name": "La Santa Misa",
   "start_url": "./index.html",
@@ -12,6 +13,7 @@
   "background_color": "#0B0A08",
   "theme_color": "#8FB3E8",
   "lang": "es",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "icon-192.png",

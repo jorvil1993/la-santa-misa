@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>La Santa Misa paso a paso</title>
+<meta name="theme-color" content="#8FB3E8">
+<meta name="description" content="Aprende la Santa Misa paso a paso.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&display=swap">
@@ -129,12 +136,20 @@ body{margin:0;font-family:"Baloo 2",system-ui,sans-serif;
 #tocar button{width:104px;height:104px;border:none;border-radius:50%;background:#F5B733;
   cursor:pointer;display:grid;place-items:center;box-shadow:0 12px 34px -8px rgba(0,0,0,.75)}
 #tocar svg{width:46px;height:46px;margin-left:5px}
+
+#instalarApp{position:fixed;top:24px;left:12px;z-index:100;
+  border:1px solid rgba(43,62,107,.25);border-radius:999px;padding:7px 13px;
+  background:rgba(255,255,255,.82);color:#2B3E6B;font:700 13px/1 system-ui,sans-serif;
+  box-shadow:0 4px 14px -3px rgba(43,62,107,.25);backdrop-filter:blur(4px);cursor:pointer}
+#instalarApp:hover{background:#fff}
+#instalarApp[hidden]{display:none!important}
 </style>
 </head>
 <body>
 
 <!-- tira de paradas: siempre visible arriba -->
 <div id="tira"></div>
+<button id="instalarApp" type="button" hidden>Instalar app</button>
 
 <div class="mapa" id="mapa">
   <div id="suelo"></div>
@@ -728,6 +743,38 @@ var RUTA_MUNDO1 = [
   if(modoPrueba()) abrirListaPrueba();
   addEventListener("resize", dibujarSenda);
 })();
+</script>
+<script>
+// Instalación PWA: el botón solo aparece cuando el navegador ofrece el prompt.
+let deferredInstallPrompt = null;
+const instalarApp = document.getElementById("instalarApp");
+
+window.addEventListener("beforeinstallprompt", event => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  instalarApp.hidden = false;
+});
+
+instalarApp.addEventListener("click", async () => {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  instalarApp.hidden = true;
+});
+
+window.addEventListener("appinstalled", () => {
+  deferredInstallPrompt = null;
+  instalarApp.hidden = true;
+});
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(error => {
+      console.warn("No se pudo registrar el service worker:", error);
+    });
+  });
+}
 </script>
 </body>
 </html>

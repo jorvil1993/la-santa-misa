@@ -1,4 +1,4 @@
-const CACHE="misa-v30";
+const CACHE="misa-v31";
 const ARCHIVOS=["./","./index.html","./cap1.html","./juego.html","./repaso.html","./pausa.html","./gloria.html","./saludo.html","./procesion.html","./canto_entrada.html","./ofrenda.html","./intenciones.html","./tarjeta.html",
   "./cruz.html","./lampara.html","./postura.html","./canciones.html",
   "./manifest.webmanifest","./icon-192.png","./icon-512.png"];
@@ -12,9 +12,15 @@ self.addEventListener("activate",e=>{
 });
 self.addEventListener("fetch",e=>{
   if(e.request.method!=="GET") return;
-  e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(res=>{
+  const url=new URL(e.request.url);
+  if(url.origin!==self.location.origin) return;
+  e.respondWith(fetch(e.request).then(res=>{
     const copia=res.clone();
     caches.open(CACHE).then(c=>c.put(e.request,copia)).catch(()=>{});
     return res;
-  }).catch(()=>caches.match("./index.html"))));
+  }).catch(()=>caches.match(e.request).then(r=>{
+    if(r) return r;
+    if(e.request.mode==="navigate") return caches.match("./index.html");
+    return Response.error();
+  })));
 });
