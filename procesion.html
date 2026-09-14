@@ -120,13 +120,13 @@ h1{font-family:"Baloo 2",sans-serif;font-weight:800;font-size:clamp(1.6rem,4.4vw
 #zona-juego.activo{pointer-events:auto}
 #zona-juego[hidden]{display:none!important}
 
-#rumbo{position:absolute;z-index:6;left:12%;top:20%;display:flex;align-items:center;gap:6px;
+#rumbo{position:absolute;z-index:6;left:12%;top:29%;display:flex;align-items:center;gap:6px;
   font-family:"Baloo 2",sans-serif;font-weight:800;color:#FFEFC8;
   font-size:clamp(10px,1.7vw,14px);text-shadow:0 2px 6px rgba(0,0,0,.8);opacity:0;
   background:rgba(28,20,12,.5);padding:3px 10px;border-radius:999px}
 #rumbo svg{width:15px;height:15px}
 
-#fila{position:absolute;z-index:6;left:12%;right:4%;top:27%;height:27%;
+#fila{position:absolute;z-index:6;left:12%;right:4%;top:36%;height:28%;
   display:flex;justify-content:space-between;align-items:flex-end;gap:1.4%;
   border-radius:16px;background:rgba(20,13,8,.42);
   box-shadow:0 0 0 1px rgba(255,226,170,.14)}
@@ -141,7 +141,7 @@ h1{font-family:"Baloo 2",sans-serif;font-weight:800;font-size:clamp(1.6rem,4.4vw
 .ranura.mira{animation:mirame 1s ease-in-out infinite alternate}
 @keyframes mirame{to{box-shadow:0 0 0 5px rgba(255,226,170,.35)}}
 
-#bandeja{position:absolute;z-index:6;left:12%;right:4%;bottom:2.5%;height:34%;
+#bandeja{position:absolute;z-index:6;left:12%;right:4%;bottom:2%;height:30%;
   display:flex;align-items:flex-end;
   border-radius:16px;background:rgba(20,13,8,.5);
   box-shadow:0 0 0 1px rgba(255,226,170,.14)}
@@ -154,10 +154,22 @@ h1{font-family:"Baloo 2",sans-serif;font-weight:800;font-size:clamp(1.6rem,4.4vw
   line-height:1.1;
   font-family:"Baloo 2",sans-serif;font-weight:700;white-space:nowrap;
   font-size:clamp(9px,1.5vw,12px);color:#FFEFC8;text-shadow:0 2px 5px rgba(0,0,0,.9)}
+.pieza img,.pieza svg{position:relative;z-index:1}
+
+.pieza::after{content:"";position:absolute;left:50%;bottom:0;transform:translateX(-50%);
+  width:86%;height:10px;border-radius:50%;background:rgba(10,6,3,.45);
+  filter:blur(3px);z-index:0}
 .pieza.agarrada{cursor:grabbing;z-index:20}
 .pieza.colocada{cursor:default;pointer-events:none}
 .pieza.colocada .quien{opacity:.55}
 .pieza.demo{pointer-events:none}
+
+#fila.sin-casillas{background:transparent;box-shadow:none}
+#fila.sin-casillas .ranura{border-color:transparent;background:transparent}
+#fila.sin-casillas .ranura .n{opacity:0}
+#bandeja.oculta{opacity:0}
+.pieza.apagada{filter:grayscale(.55) brightness(.6)}
+.pieza.senalada{filter:drop-shadow(0 0 16px rgba(255,214,110,.95))}
 
 #progreso-texto{position:absolute;z-index:14;left:3%;top:5%;
   font-family:"Baloo 2",sans-serif;font-weight:800;font-size:clamp(13px,2vw,16px);
@@ -663,54 +675,132 @@ var RUTA_MUNDO1 = [
 
   const HUECO_NOMBRE = 20;   // el sitio que ocupa el nombre debajo de la figura
 
-  function ponerEn(el, r, dejarNombre){
+  let huecosBandeja = [];
 
-    const pc=rectPantalla();
-    const ancho=el.offsetWidth||40, alto=el.offsetHeight||60;
+  function sitioDe(el, rect, dejarNombre){
+    const pc = rectPantalla();
+    const ancho = el.offsetWidth || 40, alto = el.offsetHeight || 60;
     const margen = dejarNombre ? HUECO_NOMBRE : 4;
-    el.style.left=(r.left-pc.left + r.width/2 - ancho/2)+"px";
-    el.style.top =(r.top -pc.top  + r.height  - alto - margen)+"px";
+    return { left: rect.left - pc.left + rect.width / 2 - ancho / 2,
+             top:  rect.top  - pc.top  + rect.height - alto - margen };
   }
+  function sitioRanura(el, i){
+    return sitioDe(el, getRanuras()[i].getBoundingClientRect(), true);
+  }
+  function sitioBandeja(el, i){
+    return sitioDe(el, huecosBandeja[i].getBoundingClientRect(), true);
+  }
+  function plantar(el, sitio){ el.style.left = sitio.left + "px"; el.style.top = sitio.top + "px"; }
 
   function construirPiezas(){
-    bandeja.innerHTML=""; colocados=0; elems={};
-    const pc=rectPantalla();
+    bandeja.innerHTML = ""; colocados = 0; elems = {};
 
-    const huecos=FIGURAS.map(()=>{
-      const h=document.createElement("div");
-      h.style.cssText="flex:1 1 0;height:100%";
+    huecosBandeja = FIGURAS.map(() => {
+      const h = document.createElement("div");
+      h.style.cssText = "flex:1 1 0;height:100%";
       bandeja.appendChild(h); return h;
     });
-
-    const barajado=FIGURAS.map((f,i)=>i);
-    for(let i=barajado.length-1;i>0;i--){
-      const j=Math.floor(Math.random()*(i+1));
-      [barajado[i],barajado[j]]=[barajado[j],barajado[i]];
-    }
-    barajado.forEach((idx,hueco)=>{
-      const fig=FIGURAS[idx];
-      const el=document.createElement("div");
-      el.className="pieza"; el.id=fig.id;
-      el.innerHTML=(IMG[fig.img]
-          ? '<img alt="" src="'+IMG[fig.img]+'">'
+    FIGURAS.forEach(fig => {
+      const el = document.createElement("div");
+      el.className = "pieza"; el.id = fig.id;
+      el.innerHTML = (IMG[fig.img]
+          ? '<img alt="" src="' + IMG[fig.img] + '">'
           : fig.svg)
-        + '<span class="quien">'+fig.nombre+'</span>';
-      el.dataset.pos=fig.pos;
+        + '<span class="quien">' + fig.nombre + '</span>';
+      el.dataset.pos = fig.pos;
       el.setAttribute("aria-label", fig.nombre);
       pantalla.appendChild(el);
-      elems[fig.id]=el;
+      elems[fig.id] = el;
 
-      const rh=huecos[hueco].getBoundingClientRect();
-      el.style.setProperty("--alto", Math.round(rh.height*fig.alto)+"px");
-      ponerEn(el, rh, true);
-      el.dataset.casaLeft=el.style.left; el.dataset.casaTop=el.style.top;
+      const rh = huecosBandeja[0].getBoundingClientRect();
+      el.style.setProperty("--alto", Math.round(rh.height * fig.alto) + "px");
       el.addEventListener("pointerdown", agarrar);
     });
-    bandeja.innerHTML="";
+  }
 
-    huecos.forEach(()=>{
-      const h=document.createElement("div");
-      h.style.cssText="flex:1 1 0;height:100%"; bandeja.appendChild(h);
+  function desfilar(alTerminar){
+    const pc = rectPantalla();
+    FIGURAS.forEach((fig, i) => {
+      const el = elems[fig.id];
+      const destino = sitioRanura(el, fig.pos);
+
+      plantar(el, { left: pc.width + 40 + i * 30, top: destino.top });
+      gsap.to(el, { left: destino.left, duration: 1.15, delay: i * 0.3, ease: "power1.inOut" });
+
+      gsap.fromTo(el, { y: 0 },
+        { y: -5, duration: 0.26, delay: i * 0.3, repeat: 7, yoyo: true, ease: "sine.inOut",
+          onComplete(){ gsap.set(el, { y: 0 }); } });
+    });
+    esperar(FIGURAS.length * 0.3 + 1.3, () => { alTerminar && alTerminar(); });
+  }
+
+  function colocarFilaYa(){
+
+    FIGURAS.forEach(fig => {
+      const el = elems[fig.id];
+      gsap.set(el, { y: 0 });
+      plantar(el, sitioRanura(el, fig.pos));
+    });
+  }
+
+  function senalarCruz(){
+    FIGURAS.forEach(fig => {
+      const el = elems[fig.id];
+      if(fig.pos === 0){
+        el.classList.add("senalada"); el.classList.remove("apagada");
+        gsap.to(el, { scale: 1.14, duration: .5, ease: "back.out(1.6)",
+                      transformOrigin: "bottom center" });
+        gsap.to(el, { y: -7, duration: .7, repeat: -1, yoyo: true, ease: "sine.inOut", delay: .5 });
+      } else {
+        el.classList.add("apagada"); el.classList.remove("senalada");
+      }
+    });
+  }
+  function quitarSenal(){
+    FIGURAS.forEach(fig => {
+      const el = elems[fig.id];
+      el.classList.remove("apagada", "senalada");
+      gsap.killTweensOf(el);
+      gsap.to(el, { scale: 1, y: 0, duration: .3 });
+    });
+  }
+
+  function romperFila(alTerminar){
+    const orden = FIGURAS.map((f, i) => i);
+    for(let i = orden.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [orden[i], orden[j]] = [orden[j], orden[i]];
+    }
+    fila.classList.remove("sin-casillas");
+    bandeja.classList.remove("oculta");
+    gsap.fromTo(fila, { opacity: .35 }, { opacity: 1, duration: .5 });
+    gsap.fromTo(bandeja, { opacity: 0 }, { opacity: 1, duration: .5 });
+    orden.forEach((idx, hueco) => {
+      const el = elems[FIGURAS[idx].id];
+      const destino = sitioBandeja(el, hueco);
+      gsap.to(el, { left: destino.left, top: destino.top, duration: .7,
+                    delay: hueco * .09, ease: "power2.inOut",
+                    onComplete(){ el.dataset.casaLeft = el.style.left;
+                                  el.dataset.casaTop = el.style.top; } });
+    });
+    esperar(1.4, () => { alTerminar && alTerminar(); });
+  }
+
+  function repartirYa(){
+
+    const orden = FIGURAS.map((f, i) => i);
+    for(let i = orden.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [orden[i], orden[j]] = [orden[j], orden[i]];
+    }
+    fila.classList.remove("sin-casillas");
+    bandeja.classList.remove("oculta");
+    gsap.set([fila, bandeja], { opacity: 1 });
+    orden.forEach((idx, hueco) => {
+      const el = elems[FIGURAS[idx].id];
+      gsap.set(el, { scale: 1, y: 0 });
+      plantar(el, sitioBandeja(el, hueco));
+      el.dataset.casaLeft = el.style.left; el.dataset.casaTop = el.style.top;
     });
   }
 
@@ -855,10 +945,15 @@ var RUTA_MUNDO1 = [
     });
   }
 
-  function abrirTablero(){
+  function abrirTablero(conCasillas){
+
     zonaJuego.hidden=false;
-    apartarMaria();
-    gsap.fromTo("#rumbo",{opacity:0},{opacity:1,duration:.4});
+    fila.classList.toggle("sin-casillas", !conCasillas);
+    bandeja.classList.toggle("oculta", !conCasillas);
+    gsap.set(fila,{opacity:1});
+    gsap.set(bandeja,{opacity:conCasillas?1:0});
+    if(conCasillas) gsap.fromTo("#rumbo",{opacity:0},{opacity:1,duration:.4});
+    else gsap.set("#rumbo",{opacity:0});
     construirPiezas();
   }
 
@@ -871,8 +966,10 @@ var RUTA_MUNDO1 = [
     jugando = false; arrastrado = null; mariaApartada = false;
     zonaJuego.classList.remove("activo"); zonaJuego.hidden = true;
     getRanuras().forEach(r=>r.classList.remove("ok","candidata","mira"));
-    Object.values(elems).forEach(el=>el.remove()); elems={};
-    bandeja.innerHTML=""; colocados = 0;
+    Object.values(elems).forEach(el=>{ gsap.killTweensOf(el); el.remove(); }); elems={};
+    bandeja.innerHTML=""; huecosBandeja=[]; colocados = 0;
+    fila.classList.remove("sin-casillas"); bandeja.classList.remove("oculta");
+    gsap.set([fila,bandeja],{opacity:1});
     gsap.set("#rumbo",{opacity:0}); gsap.set("#fila",{opacity:1});
     gsap.set(maria, {opacity:1, scale:1, x:0, scaleX:1, scaleY:1});
     gsap.set("#insignia", {opacity:0, scale:0, rotation:0});
@@ -881,35 +978,44 @@ var RUTA_MUNDO1 = [
   }
 
   const SECCIONES_PROCESION = [
+
     function(){
       limpiarTodoProcesion(); seccionActual = 0;
+      abrirTablero(false);
       pose("presenta");
-      hablar("a1", TEXTOS.a1, ()=>mostrarSeguir(()=>irASeccionProcesion(1)));
+      hablar("a1", TEXTOS.a1);
+      desfilar(()=>{
+        if(seccionActual===0) mostrarSeguir(()=>irASeccionProcesion(1));
+      });
     },
+
     function(){
-      limpiarTodoProcesion(); seccionActual = 1;
+      if(seccionActual!==0){ limpiarTodoProcesion(); abrirTablero(false); colocarFilaYa(); }
+      seccionActual = 1;
+      quitarSenal(); senalarCruz();
       pose("senala_lado");
       hablar("a2", TEXTOS.a2, ()=>mostrarSeguir(()=>irASeccionProcesion(2)));
     },
 
     function(){
-      limpiarTodoProcesion(); seccionActual = 2;
-      abrirTablero();
+      if(seccionActual!==1){ limpiarTodoProcesion(); abrirTablero(false); colocarFilaYa(); }
+      seccionActual = 2;
+      quitarSenal();
       pose("presenta");
-      hablar("a3", TEXTOS.a3, ()=>{
-        demostrar(()=>irASeccionProcesion(3));
+      romperFila(()=>{
+        hablar("a3", TEXTOS.a3, ()=>demostrar(()=>irASeccionProcesion(3)));
       });
     },
 
     function(){
       if(seccionActual !== 2){
 
-        limpiarTodoProcesion();
-        abrirTablero();
+        limpiarTodoProcesion(); abrirTablero(true); repartirYa();
         const el=elems["f-cruz"], ran=getRanuras()[0];
         if(el && ran) encajar(el, ran, false);
       }
       seccionActual = 3;
+      apartarMaria();
       jugando=true; zonaJuego.classList.add("activo");
       getRanuras().forEach(r=>{ if(!r.classList.contains("ok")) r.classList.add("mira"); });
       pose("anima");
