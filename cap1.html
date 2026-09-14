@@ -4,22 +4,54 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png">
 <title>Las campanas</title><style>
-html,body{height:100%;margin:0;background:#0B0A08;overscroll-behavior:none}
-body{display:grid;place-items:center;overflow:hidden}
+:root{--vh:100dvh;--vw:100vw;
+  --sh:calc(var(--vh) - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));
+  --sw:calc(var(--vw) - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px))}
+html{height:100%;margin:0;background:#0B0A08}
+body{margin:0;background:#0B0A08;overscroll-behavior:none;
+  width:var(--vw);height:var(--vh);box-sizing:border-box;
+  padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px)
+          env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);
+  display:grid;place-items:center;overflow:hidden}
 .env{max-width:none!important;margin:0!important;padding:0!important;width:auto!important}
 .cab,.barra,.notas{display:none!important}
 .pantalla{position:relative;
-  width:min(100vw, calc(100dvh * 16 / 10))!important;
-  height:min(100dvh, calc(100vw * 10 / 16))!important;
+  width:min(var(--sw), calc(var(--sh) * 16 / 10))!important;
+  height:min(var(--sh), calc(var(--sw) * 10 / 16))!important;
   aspect-ratio:16/10!important;
-  max-width:100vw!important;max-height:100dvh!important;
+  max-width:var(--sw)!important;max-height:var(--sh)!important;
   overflow:hidden;border-radius:0!important;box-shadow:none!important}
+#inicio{position:fixed!important;inset:auto!important;left:0!important;top:0!important;
+  width:var(--vw)!important;height:var(--vh)!important;box-sizing:border-box;
+  padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px)
+          env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);
+  z-index:60!important}
+#empezar{margin-bottom:0!important}
 #pantallaCompleta,#reiniciar,#saltar,#casi,.pruebas{display:none!important}
-#casita-nav{position:fixed;z-index:99999;right:14px;top:14px;width:46px;height:46px;
+#casita-nav{position:fixed;z-index:99999;
+ right:calc(14px + env(safe-area-inset-right,0px));
+ top:calc(14px + env(safe-area-inset-top,0px));width:46px;height:46px;
  border:none;border-radius:50%;cursor:pointer;padding:0;background:rgba(255,255,255,.9);
  box-shadow:0 5px 14px -4px rgba(0,0,0,.5);display:grid;place-items:center}
 #casita-nav svg{width:24px;height:24px}
-</style></head><body>
+</style><script>
+(function(){
+  var raiz=document.documentElement, ah=0, aw=0;
+  function medir(){
+    var h=window.innerHeight||0, w=window.innerWidth||0;
+    if(!h||!w) return;
+    if(Math.abs(h-ah)<2 && Math.abs(w-aw)<2) return;
+    ah=h; aw=w;
+    raiz.style.setProperty("--vh", h+"px");
+    raiz.style.setProperty("--vw", w+"px");
+  }
+  medir();
+  addEventListener("resize", medir, {passive:true});
+  addEventListener("orientationchange", function(){ setTimeout(medir,120); });
+  if(window.visualViewport){ window.visualViewport.addEventListener("resize", medir, {passive:true}); }
+  [60,240,700,1500].forEach(function(t){ setTimeout(medir,t); });
+})();
+</script></head><body>
 
 <head>
   <meta charset="utf-8">
@@ -653,6 +685,88 @@ var RUTA_MUNDO1 = [
     document.body.appendChild(nav);
   }
   crearControles();
+})();
+
+// ---- El nombre de la insignia --------------------------------------------
+// A José le motivan los premios, pero una medalla sin nombre no se colecciona:
+// las ocho se veían como "otra insignia más". `montar.py` deja el nombre de la
+// de esta pantalla en `window.MISA_INSIGNIA` (mapa `INSIGNIAS`) y aquí se pinta
+// debajo de la medalla en cuanto aparece. El nombre va en HTML y no dibujado
+// dentro de la imagen: sale nítido a cualquier tamaño y se corrige sin volver a
+// generar el arte.
+(function(){
+  if(typeof document==="undefined") return;
+
+  function arrancar(){
+    var medalla=document.getElementById("insignia");
+    var nombre=window.MISA_INSIGNIA;
+    if(!medalla || !nombre) return;
+
+    var estilo=document.createElement("style");
+    estilo.textContent="#misa-insignia-nombre{position:fixed;z-index:61;"+
+      "transform:translateX(-50%) translateY(6px);opacity:0;pointer-events:none;"+
+      "font-family:'Baloo 2',system-ui,sans-serif;font-weight:800;"+
+      "font-size:clamp(15px,2.6vw,23px);color:#FFF4DA;text-align:center;"+
+      "white-space:nowrap;padding:5px 16px;border-radius:999px;"+
+      "background:rgba(28,20,12,.62);"+
+      "text-shadow:0 2px 6px rgba(0,0,0,.65);"+
+      "transition:opacity .45s ease,transform .45s ease}"+
+      "#misa-insignia-nombre.se-ve{opacity:1;transform:translateX(-50%) translateY(0)}"+
+      "#misa-insignia-nombre[hidden]{display:none}";
+    (document.head||document.body).appendChild(estilo);
+
+    var etiqueta=document.createElement("div");
+    etiqueta.id="misa-insignia-nombre";
+    etiqueta.textContent=nombre;
+    etiqueta.hidden=true;
+    document.body.appendChild(etiqueta);
+
+    var puesta=false, cita=null;
+
+    function colocar(){
+      var r=medalla.getBoundingClientRect();
+      if(!r.width || !r.height) return false;
+      etiqueta.style.left=(r.left + r.width/2)+"px";
+      etiqueta.style.top=(r.bottom + 10)+"px";
+      return true;
+    }
+    function seVe(){
+      if(!medalla.getAttribute("src")) return false;
+      var e=getComputedStyle(medalla);
+      if(e.display==="none" || e.visibility==="hidden") return false;
+      return parseFloat(e.opacity||"0") > .25;
+    }
+    function revisar(){
+      if(seVe()){
+        if(puesta) return;
+        puesta=true;
+        // la medalla entra con una animación: se espera a que se asiente para
+        // no clavar la etiqueta donde todavía no está.
+        cita=setTimeout(function(){
+          if(!seVe()){ puesta=false; return; }
+          if(!colocar()) { puesta=false; return; }
+          etiqueta.hidden=false;
+          requestAnimationFrame(function(){ etiqueta.classList.add("se-ve"); });
+        }, 900);
+      } else if(puesta){
+        puesta=false;
+        if(cita){ clearTimeout(cita); cita=null; }
+        etiqueta.classList.remove("se-ve");
+        etiqueta.hidden=true;
+      }
+    }
+
+    new MutationObserver(revisar).observe(medalla,
+      {attributes:true, attributeFilter:["style","src","class","hidden"]});
+    addEventListener("resize", function(){ if(!etiqueta.hidden) colocar(); }, {passive:true});
+    revisar();
+  }
+
+  if(document.readyState==="loading"){
+    document.addEventListener("DOMContentLoaded", arrancar);
+  } else {
+    arrancar();
+  }
 })();
 
 </script>
